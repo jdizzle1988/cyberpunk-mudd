@@ -1,12 +1,14 @@
 #!/usr/bin/python
 import csv
+import os
+import numpy as nrand
 
 def game():
     
     gloop = 1
 
     while gloop != 0:
-
+        os.system('cls' if os.name == 'nt' else 'clear')
         title, des, exits, npc = getroom()
         print " "
         print "Location: " + title
@@ -35,17 +37,54 @@ def game():
         print " "
         print "The obvious exit(s) are: " + ex
         print " "
-        print npc + " Is in the area."
+        if npc != "0":
+            print npc + " Is in the area."
+        else:
+            print "There is no one around."
         print " "
         command = raw_input("What would you like to do?: ").lower()
 
         if "go" in command:
-            if "south" in command:
+            if "north" in command:
+                room[1] -= 1
+            elif "east" in command:
+                room[0] += 1
+            elif "south" in command:
                 room[1] += 1
-        
+            elif "west" in command:
+                room[0] -= 1
+            else:
+                print "Invalid Direction."
+        elif "/c" in command:
+            csheet()
+            raw_input("Press Enter to Return...")
+        elif "/i" in command:
+            inv()
+            raw_input("Press Enter to Return...")
+        else:
+            print "Invalid Command"
+         
 
 
 
+
+
+    return;
+
+def start_game():
+
+    print "Cyberwar 2120"
+    print "(N)ew Game"
+    print "(L)oad Game"
+    print "(Q)uit Game"
+    game = raw_input("> ").lower()
+
+    if game == "n":
+        new_game()
+    elif game == "l":
+        exit
+    elif game == "q":
+        exit
 
 
     return;
@@ -62,6 +101,14 @@ def char_setup():
     print "Hello. Welcome to Cyber War 2120. You are about to enter a cyber-punk style future where you can create your own destiny."
     global room
     room = [1, 1]
+    global hp
+    hp = 0
+    global chp
+    chp = 0
+    global slots
+    slots = 0
+    global armor
+    armor = 0
     global cname
     cname = raw_input('Please enter your character name: ')
     global csex
@@ -109,7 +156,9 @@ def char_setup():
     if cclass == "hacker":
         cclass = "Hacker"
         cstr += 0
-        ccon += 2 
+        ccon += 2
+        hp = ccon + 10
+        chp = hp  
         cdex += 1
         cint += 5
         cwis += 3
@@ -118,6 +167,8 @@ def char_setup():
         cclass = "Netmind"
         cstr += 0
         ccon += 2 
+        hp = ccon + 10 
+        chp = hp  
         cdex += 0
         cint += 3
         cwis += 5
@@ -126,6 +177,8 @@ def char_setup():
         cclass = "Runner"
         cstr += 2
         ccon += 3 
+        hp = ccon + 10 
+        chp = hp  
         cdex += 5
         cint += 0
         cwis += 2
@@ -134,6 +187,8 @@ def char_setup():
         cclass = "Cybernetic"
         cstr += 5
         ccon += 5 
+        hp += (ccon + 10)
+        chp = hp  
         cdex += 0
         cint += 2
         cwis += 2
@@ -142,6 +197,8 @@ def char_setup():
         cclass = "Warlord"
         cstr += 4
         ccon += 3 
+        hp = ccon + 10 
+        chp = hp  
         cdex += 0
         cint += 1
         cwis += 2
@@ -160,6 +217,7 @@ def csheet():
     print "Name:  " + cname
     print "Sex:   " + csex
     print "Class: " + cclass
+    print "HP:    " + str(chp) + "/" + str(hp)
     print "--------Stats--------"
     print "Strength:     " + str(cstr)
     print "Constitution: " + str(ccon)
@@ -169,6 +227,47 @@ def csheet():
     print "Charisma:     " + str(ccha)
     print " "
 
+
+    return;
+
+def inv():
+
+    print "-------Inventory-------"
+    print "======================="
+    print "-------Equipped-------"
+    with open('./player_data/inv.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if "y" == row['equip'] and "head" == row['pos']:
+                print "Head:  " + row['title']
+    with open('./player_data/inv.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if "y" == row['equip'] and "body" == row['pos']:
+                print "Body:  " + row['title']
+    with open('./player_data/inv.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if "y" == row['equip'] and "back" == row['pos']:
+                print "Back:  " + row['title']             
+    with open('./player_data/inv.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if "y" == row['equip'] and "hand" == row['pos']:
+                print "Hands: " + row['title']
+    with open('./player_data/inv.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if "y" == row['equip'] and "legs" == row['pos']:
+                print "Legs:  " + row['title']  
+    print "----------------------"
+    print "-------Backpack-------"
+    with open('./player_data/inv.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            if "y" == row['pack']:
+                print row['title']
+    print " "
 
     return;
 
@@ -207,17 +306,18 @@ def getroom():
     with open('./db/world.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            if room[0] == row['x'] and room[1] == row['y']:
+            if str(room[0]) == row['x'] and str(room[1]) == row['y']:
                 #print(row['x'], row['y'], row['title'], row['desc'], row['exits'], row['npc'])
                 title = row['title']
                 des = row['desc']
                 exits = row['exits']
                 npc = row['npc']
+                #print title + des + exits + npc
 
             
 
 
-    return (title, des, exits, npc);
+    return title, des, exits, npc;
 
-new_game()
+start_game()
 
