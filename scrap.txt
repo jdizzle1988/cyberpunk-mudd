@@ -1,0 +1,43 @@
+Hacker
+str 10 - 0
+con 10 - 2
+agi 10 - 1
+int 10 - 5
+wis 10 - 3
+cha 10 - 4
+
+Netmind
+str 10 - 0
+con 10 - 2
+agi 10 - 0
+int 10 - 3
+wis 10 - 5
+cha 10 - 5
+
+Runner
+str 10 - 2
+con 10 - 3
+agi 10 - 5
+int 10 - 0
+wis 10 - 2
+cha 10 - 3
+
+Cybernetic
+str 10 - 5
+con 10 - 5
+agi 10 - 0
+int 10 - 2
+wis 10 - 2
+cha 10 - 1
+
+Warlord
+str 10 - 4
+con 10 - 3
+agi 10 - 0
+int 10 - 1
+wis 10 - 2
+cha 10 - 5
+
+db info
+
+x coord, y coord, title, desc, exits, npc
