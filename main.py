@@ -45,7 +45,7 @@ def game():
         
         if "pve" in zone:
             print "Something attacks!"
-            combat(lvl)
+            combat()
         else:
             command = raw_input("What would you like to do?: ").lower()
             if "go" in command:
@@ -120,7 +120,7 @@ def new_game():
 def char_setup():
     print "Hello. Welcome to Cyber War 2120. You are about to enter a cyber-punk style future where you can create your own destiny."
     global room
-    room = [1, 1]
+    room = [2, 7]
     global credit
     credit = 50
     global hp
@@ -152,7 +152,7 @@ def char_setup():
     global cwis
     cwis = 10
     global atk
-    atk = 1
+    atk = 2
     end = 1
 
     while end != 0:
@@ -229,6 +229,7 @@ def char_setup():
         ccha += 5
 
     print "Here is your character sheet. To see your character sheet just type, /c "
+    raw_input("Press enter to continue....")
     csheet()
     raw_input("Press enter to continue....")
 
@@ -297,40 +298,50 @@ def inv():
 
     return;
 
-def combat(lvl):
+def combat():
+    
     ename = ""
-    ehp = ""
-    ehpmax = ""
-    eatk = ""
+    ehp = 0
+    ehpmax = 0
+    eatk = 0
     eac = ""
     print "------Combat------"
     with open('./db/enemies.csv') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
             rnd = 1 #numpy.random.rand(10)
-            if rnd == row['id']:
+            #print row['id']
+            if row['id'] == str(rnd):
                 ename = row['name']
-                ehp = row['hp']
+                ehp = int(row['hp'])
                 ehpmax = ehp
                 eatk = row['dmg']
                 eac = row['ac']
     fightloop = 1
     turn = 1
-    chpmax = chp
-    while fightloop != 0:            
+    #chpmax = hp
+    global chp
+    while fightloop != 0: 
+        os.system('cls' if os.name == 'nt' else 'clear')           
         print "Enemy: " + str(ename)
         print "HP:    " + str(ehp) + "/" + str(ehpmax)
         print "---------------------"
-        print "Your HP: " + str(chp) + "/" + str(chpmax)
+        print "Your HP: " + str(chp) + "/" + str(hp)
         if turn == 1:
             command = raw_input("What do you want to do?: ")
             if "attack" in command:
-                dmg = numpy.random.rand(atk)
+                dmg = int(nrand.random.randint(low=0, high=atk, size=1))
                 print "You strike " + str(ename) + " causing " + str(dmg) + " damage!"
+                ehp -= dmg
+                raw_input("Press Enter to end turn...")
             turn = 0
         else:
-            edmg = numpy.random.rand(eatk)
+            edmg = int(nrand.random.randint(low=1, high=eatk, size=1))
             print str(ename) + " strikes you for " + str(edmg) + " damage!"
+            #global hp 
+            chp -= edmg
+            turn = 1
+            raw_input("Press enter to start your turn...")
 
 
 
