@@ -9,7 +9,7 @@ def game():
 
     while gloop != 0:
         os.system('cls' if os.name == 'nt' else 'clear')
-        title, des, exits, npc = getroom()
+        title, des, exits, npc, zone, lvl = getroom()
         print " "
         print "Location: " + title
         print " "
@@ -42,27 +42,47 @@ def game():
         else:
             print "There is no one around."
         print " "
-        command = raw_input("What would you like to do?: ").lower()
-
-        if "go" in command:
-            if "north" in command:
-                room[1] -= 1
-            elif "east" in command:
-                room[0] += 1
-            elif "south" in command:
-                room[1] += 1
-            elif "west" in command:
-                room[0] -= 1
-            else:
-                print "Invalid Direction."
-        elif "/c" in command:
-            csheet()
-            raw_input("Press Enter to Return...")
-        elif "/i" in command:
-            inv()
-            raw_input("Press Enter to Return...")
+        
+        if "pve" in zone:
+            print "Something attacks!"
+            combat(lvl)
         else:
-            print "Invalid Command"
+            command = raw_input("What would you like to do?: ").lower()
+            if "go" in command:
+                if "north" in command:
+                    if "North" in ex:
+                        room[1] -= 1
+                    else:
+                        print "No exit that direction!"
+                        raw_input("Press enter to continue....")
+                elif "east" in command:
+                    if "East" in ex:
+                        room[0] += 1
+                    else:
+                        print "No exit that direction!"
+                        raw_input("Press enter to continue....")
+                elif "south" in command:
+                    if "South" in ex:
+                        room[1] += 1
+                    else:
+                        print "No exit that direction!"
+                        raw_input("Press enter to continue....")
+                elif "west" in command:
+                    if "West" in ex:
+                        room[0] -= 1
+                    else:
+                        print "No exit that direction!"
+                        raw_input("Press enter to continue....")
+                else:
+                    print "Invalid Direction."
+            elif "/c" in command:
+                csheet()
+                raw_input("Press Enter to Return...")
+            elif "/i" in command:
+                inv()
+                raw_input("Press Enter to Return...")
+            else:
+                print "Invalid Command"
          
 
 
@@ -101,6 +121,8 @@ def char_setup():
     print "Hello. Welcome to Cyber War 2120. You are about to enter a cyber-punk style future where you can create your own destiny."
     global room
     room = [1, 1]
+    global credit
+    credit = 50
     global hp
     hp = 0
     global chp
@@ -129,6 +151,8 @@ def char_setup():
     cint = 10
     global cwis
     cwis = 10
+    global atk
+    atk = 1
     end = 1
 
     while end != 0:
@@ -211,7 +235,7 @@ def char_setup():
     return;
 
 def csheet():
-    
+    os.system('cls' if os.name == 'nt' else 'clear')
     print " "
     print "--Character Sheet--"
     print "Name:  " + cname
@@ -232,8 +256,10 @@ def csheet():
 
 def inv():
 
+    os.system('cls' if os.name == 'nt' else 'clear')
     print "-------Inventory-------"
     print "======================="
+    print "Credits: " + str(credit)
     print "-------Equipped-------"
     with open('./player_data/inv.csv') as csvfile:
         reader = csv.DictReader(csvfile)
@@ -267,7 +293,46 @@ def inv():
         for row in reader:
             if "y" == row['pack']:
                 print row['title']
-    print " "
+    print " "  
+
+    return;
+
+def combat(lvl):
+    ename = ""
+    ehp = ""
+    ehpmax = ""
+    eatk = ""
+    eac = ""
+    print "------Combat------"
+    with open('./db/enemies.csv') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            rnd = 1 #numpy.random.rand(10)
+            if rnd == row['id']:
+                ename = row['name']
+                ehp = row['hp']
+                ehpmax = ehp
+                eatk = row['dmg']
+                eac = row['ac']
+    fightloop = 1
+    turn = 1
+    chpmax = chp
+    while fightloop != 0:            
+        print "Enemy: " + str(ename)
+        print "HP:    " + str(ehp) + "/" + str(ehpmax)
+        print "---------------------"
+        print "Your HP: " + str(chp) + "/" + str(chpmax)
+        if turn == 1:
+            command = raw_input("What do you want to do?: ")
+            if "attack" in command:
+                dmg = numpy.random.rand(atk)
+                print "You strike " + str(ename) + " causing " + str(dmg) + " damage!"
+            turn = 0
+        else:
+            edmg = numpy.random.rand(eatk)
+            print str(ename) + " strikes you for " + str(edmg) + " damage!"
+
+
 
     return;
 
@@ -302,6 +367,8 @@ def getroom():
     des = ""
     exits = ""
     npc = ""
+    zone = ""
+    lvl = ""
 
     with open('./db/world.csv') as csvfile:
         reader = csv.DictReader(csvfile)
@@ -312,12 +379,14 @@ def getroom():
                 des = row['desc']
                 exits = row['exits']
                 npc = row['npc']
+                zone = row['zone']
+                lvl = row['lvl']
                 #print title + des + exits + npc
 
             
 
 
-    return title, des, exits, npc;
+    return title, des, exits, npc, zone, lvl;
 
 start_game()
 
