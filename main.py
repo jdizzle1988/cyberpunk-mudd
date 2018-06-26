@@ -333,10 +333,10 @@ def inv():
                         temp2.append([row['id'],row['title'],row['desc'],row['buff'],row['dmg'],row['equip'],row['pack'],row['pos']])
   
             with open('./player_data/temp_inv.csv', 'w') as wcsvfile:
-                #fieldnames = ['id','title','desc','buff','dmg','equip','pack','pos']
-                writer = csv.writer(wcsvfile)
-                writer.writerow(['id','title','desc','buff','dmg','equip','pack','pos'])
-                writer.writerow(temp2)
+                fieldnames = ['id','title','desc','buff','dmg','equip','pack','pos']
+                writer = csv.DictWriter(wcsvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(temp2)
             
             #print temp2
             raw_input("Press any key....")
