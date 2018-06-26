@@ -40,12 +40,16 @@ def game():
         if npc != "0":
             print npc + " Is in the area."
         else:
-            print "There is no one around."
+            print "There is no one around to talk to."
         print " "
         
         if "pve" in zone:
-            print "Something attacks!"
-            combat()
+            chance = int(nrand.random.randint(low=0, high=10, size=1))
+            if chance <= 2:
+                print "Something attacks!"
+                combat()
+            else:
+                print "You do not see any enemies."
         else:
             command = raw_input("What would you like to do?: ").lower()
             if "go" in command:
@@ -119,8 +123,10 @@ def new_game():
 
 def char_setup():
     print "Hello. Welcome to Cyber War 2120. You are about to enter a cyber-punk style future where you can create your own destiny."
+    global invloop
+    invloop = 1
     global room
-    room = [2, 7]
+    room = [1, 1]
     global credit
     credit = 50
     global hp
@@ -256,46 +262,84 @@ def csheet():
     return;
 
 def inv():
+    while invloop == 1:
+        os.system('cls' if os.name == 'nt' else 'clear')
+        print "-------Inventory-------"
+        print "======================="
+        print "Credits: " + str(credit)
+        print "-------Equipped-------"
+        with open('./player_data/inv.csv') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if "y" == row['equip'] and "head" == row['pos']:
+                    print "Head:  " + row['title']
+        with open('./player_data/inv.csv') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if "y" == row['equip'] and "body" == row['pos']:
+                    print "Body:  " + row['title']
+        with open('./player_data/inv.csv') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if "y" == row['equip'] and "back" == row['pos']:
+                    print "Back:  " + row['title']             
+        with open('./player_data/inv.csv') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if "y" == row['equip'] and "hand" == row['pos']:
+                    print "Hands: " + row['title']
+        with open('./player_data/inv.csv') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if "y" == row['equip'] and "legs" == row['pos']:
+                    print "Legs:  " + row['title']  
+        print "----------------------"
+        print "-------Backpack-------"
+        with open('./player_data/inv.csv') as csvfile:
+            reader = csv.DictReader(csvfile)
+            for row in reader:
+                if "y" == row['pack']:
+                    print row['title']
+        print " "  
 
-    os.system('cls' if os.name == 'nt' else 'clear')
-    print "-------Inventory-------"
-    print "======================="
-    print "Credits: " + str(credit)
-    print "-------Equipped-------"
-    with open('./player_data/inv.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if "y" == row['equip'] and "head" == row['pos']:
-                print "Head:  " + row['title']
-    with open('./player_data/inv.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if "y" == row['equip'] and "body" == row['pos']:
-                print "Body:  " + row['title']
-    with open('./player_data/inv.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if "y" == row['equip'] and "back" == row['pos']:
-                print "Back:  " + row['title']             
-    with open('./player_data/inv.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if "y" == row['equip'] and "hand" == row['pos']:
-                print "Hands: " + row['title']
-    with open('./player_data/inv.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if "y" == row['equip'] and "legs" == row['pos']:
-                print "Legs:  " + row['title']  
-    print "----------------------"
-    print "-------Backpack-------"
-    with open('./player_data/inv.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if "y" == row['pack']:
-                print row['title']
-    print " "  
-
+        command = raw_input("What would you like to do? ")
+        
+        if "equip" in command:
+            print " "
+            print "---In Backpack---"
+            with open('./player_data/inv.csv') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    if "y" == row['pack']:
+                        print row['title']
+            print " "           
+            command = raw_input("What would you like to equip? ")
+            temp = []
+            temp1 = []
+            temp2 = []
+            with open('./player_data/inv.csv') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    if command == row['title']:
+                        temp = [row['id'],row['title'],row['desc'],row['buff'],row['dmg'],'y','n',row['pos']]
+                        with open('./player_data/inv.csv') as csvfile:
+                            reader1 = csv.DictReader(csvfile)
+                            for row in reader1:
+                                if row['pos'] in temp[7] and 'y' in row['equip']:
+                                    temp1 = [row['id'],row['title'],row['desc'],row['buff'],row['dmg'],'n','y',row['pos']]
+                                    temp2.append(temp)
+                                    temp2.append(temp1)
+                    else:
+                        temp2.append([row['id'],row['title'],row['desc'],row['buff'],row['dmg'],row['equip'],row['pack'],row['pos']])
+  
+            with open('./player_data/temp_inv.csv', 'w') as wcsvfile:
+                #fieldnames = ['id','title','desc','buff','dmg','equip','pack','pos']
+                writer = csv.writer(wcsvfile)
+                writer.writerow(['id','title','desc','buff','dmg','equip','pack','pos'])
+                writer.writerow(temp2)
+            
+            #print temp2
+            raw_input("Press any key....")
     return;
 
 def combat():
@@ -322,28 +366,49 @@ def combat():
     #chpmax = hp
     global chp
     while fightloop != 0: 
-        os.system('cls' if os.name == 'nt' else 'clear')           
-        print "Enemy: " + str(ename)
-        print "HP:    " + str(ehp) + "/" + str(ehpmax)
-        print "---------------------"
-        print "Your HP: " + str(chp) + "/" + str(hp)
-        if turn == 1:
-            command = raw_input("What do you want to do?: ")
-            if "attack" in command:
-                dmg = int(nrand.random.randint(low=0, high=atk, size=1))
-                print "You strike " + str(ename) + " causing " + str(dmg) + " damage!"
-                ehp -= dmg
-                raw_input("Press Enter to end turn...")
-            turn = 0
+        if ehp <= 0:
+            fight_win()
+            fightloop = 0
+        elif chp <= 0:
+            print "Fuck"
         else:
-            edmg = int(nrand.random.randint(low=1, high=eatk, size=1))
-            print str(ename) + " strikes you for " + str(edmg) + " damage!"
-            #global hp 
-            chp -= edmg
-            turn = 1
-            raw_input("Press enter to start your turn...")
+            os.system('cls' if os.name == 'nt' else 'clear')           
+            print "Enemy: " + str(ename)
+            print "HP:    " + str(ehp) + "/" + str(ehpmax)
+            print "---------------------"
+            print "Your HP: " + str(chp) + "/" + str(hp)
+            if turn == 1:
+                command = raw_input("What do you want to do?: ")
+                if "attack" in command:
+                    dmg = int(nrand.random.randint(low=0, high=(atk + (cstr - 10)), size=1))
+                    if dmg == 0:
+                        print "You missed " + str(ename) + "!"
+                    else:
+                        print "You strike " + str(ename) + " causing " + str(dmg) + " damage!"
+                    ehp -= dmg
+                    raw_input("Press Enter to end turn...")
+                    turn = 0
+                else:
+                    print "You didn't enter a valid command!"
+                
+            else:
+                edmg = int(nrand.random.randint(low=1, high=eatk, size=1))
+                if edmg == 0:
+                    print str(ename) + " Misses you!"
+                else:
+                    print str(ename) + " strikes you for " + str(edmg) + " damage!"
+                #global hp 
+                chp -= edmg
+                turn = 1
+                raw_input("Press enter to start your turn...")
 
 
+
+    return;
+
+def fight_win():
+
+    print "You Win!"
 
     return;
 

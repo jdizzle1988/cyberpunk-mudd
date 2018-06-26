@@ -5,3 +5,4 @@ id,title,desc,buff,dmg,pos
 4,Rations,"A high calorie meal. Doesn't taste good but will keep you alive.",hp|10,0,cons
 5,Blue Jeans,"Jeans. That are blue.",ac|1,0,legs
 6,Aviators,"A pair of black aviator sunglasses.",ac|1,0,head
+7,9mm Pistol,"A pistol in the 9mm caliber.",0,5,hand
