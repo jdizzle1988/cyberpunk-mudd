@@ -262,6 +262,7 @@ def csheet():
     return;
 
 def inv():
+    invloop = 1
     while invloop == 1:
         os.system('cls' if os.name == 'nt' else 'clear')
         print "-------Inventory-------"
@@ -331,15 +332,31 @@ def inv():
                                     temp2.append(temp1)
                     else:
                         temp2.append([row['id'],row['title'],row['desc'],row['buff'],row['dmg'],row['equip'],row['pack'],row['pos']])
-  
-            with open('./player_data/temp_inv.csv', 'w') as wcsvfile:
-                fieldnames = ['id','title','desc','buff','dmg','equip','pack','pos']
-                writer = csv.DictWriter(wcsvfile, fieldnames=fieldnames)
-                writer.writeheader()
-                writer.writerows(temp2)
+                        
+            # with open('./player_data/temp_inv.csv', 'wb') as wcsvfile:
+            #     fieldnames = ['id','title','desc','buff','dmg','equip','pack','pos']
+            #     writer = csv.DictWriter(wcsvfile, fieldnames=fieldnames, extrasaction='ignore')
+            #     writer.writeheader()
+            #     #thisdict = {'id': temp2[0], 'title': temp2[1], 'desc': temp2[2], 'buff': temp2[3], 'dmg': temp2[4], 'equip': temp2[5], 'pack': temp2[6], 'pos': temp2[7]}
+            #     writer.writerows(temp2)
+            output = open("./player_data/temp_inv.csv", "w")
+            output.write("id,title,desc,buff,dmg,equip,pack,pos" + "\n")
+            for item in temp2:
+                tmpstr = str(item).replace("[", "")
+                tmpstr = str(tmpstr).replace("]", "")
+                tmpstr = str(tmpstr).replace()
+                output.write(str(tmpstr) + "\n")
+            output.close()
+
+
+
+        elif "exit" in command:
+            invloop = 0
+
+        
             
             #print temp2
-            raw_input("Press any key....")
+        raw_input("Press any key....")
     return;
 
 def combat():
