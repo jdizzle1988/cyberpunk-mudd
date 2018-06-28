@@ -2,6 +2,7 @@
 import csv
 import os
 import numpy as nrand
+import sqlite3
 
 def game():
     
@@ -265,88 +266,55 @@ def inv():
     invloop = 1
     while invloop == 1:
         os.system('cls' if os.name == 'nt' else 'clear')
+        conn = sqlite3.connect('./db/cyberpunkdb.sqlite3')
+        c = conn.cursor()
         print "-------Inventory-------"
         print "======================="
         print "Credits: " + str(credit)
         print "-------Equipped-------"
-        with open('./player_data/inv.csv') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if "y" == row['equip'] and "head" == row['pos']:
-                    print "Head:  " + row['title']
-        with open('./player_data/inv.csv') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if "y" == row['equip'] and "body" == row['pos']:
-                    print "Body:  " + row['title']
-        with open('./player_data/inv.csv') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if "y" == row['equip'] and "back" == row['pos']:
-                    print "Back:  " + row['title']             
-        with open('./player_data/inv.csv') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if "y" == row['equip'] and "hand" == row['pos']:
-                    print "Hands: " + row['title']
-        with open('./player_data/inv.csv') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if "y" == row['equip'] and "legs" == row['pos']:
-                    print "Legs:  " + row['title']  
+        for row in c.execute("SELECT i.title, i.pos FROM player_inv pi, items i WHERE pi.item_id = i.id AND equip = 'y'"):
+            print str(row[1]) + ": " + str(row[0])
         print "----------------------"
         print "-------Backpack-------"
-        with open('./player_data/inv.csv') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                if "y" == row['pack']:
-                    print row['title']
+        c.close()
+        c1 = conn.cursor()
+        for row in c1.execute("SELECT i.title FROM player_inv pi, items i WHERE pi.item_id = i.id AND pack = 'y'"):
+            print row[0]
         print " "  
-
+        c1.close()
         command = raw_input("What would you like to do? ")
         
         if "equip" in command:
             print " "
             print "---In Backpack---"
-            with open('./player_data/inv.csv') as csvfile:
-                reader = csv.DictReader(csvfile)
-                for row in reader:
-                    if "y" == row['pack']:
-                        print row['title']
-            print " "           
+            c2 = conn.cursor()
+            for row in c2.execute("SELECT i.title FROM player_inv pi, items i WHERE pi.item_id = i.id AND pack = 'y'"):
+                print row[0]
+            print " "  
+            c2.close()         
             command = raw_input("What would you like to equip? ")
             temp = []
             temp1 = []
             temp2 = []
-            with open('./player_data/inv.csv') as csvfile:
-                reader = csv.DictReader(csvfile)
-                for row in reader:
-                    if command == row['title']:
-                        temp = [row['id'],row['title'],row['desc'],row['buff'],row['dmg'],'y','n',row['pos']]
-                        with open('./player_data/inv.csv') as csvfile:
-                            reader1 = csv.DictReader(csvfile)
-                            for row in reader1:
-                                if row['pos'] in temp[7] and 'y' in row['equip']:
-                                    temp1 = [row['id'],row['title'],row['desc'],row['buff'],row['dmg'],'n','y',row['pos']]
-                                    temp2.append(temp)
-                                    temp2.append(temp1)
-                    else:
-                        temp2.append([row['id'],row['title'],row['desc'],row['buff'],row['dmg'],row['equip'],row['pack'],row['pos']])
-                        
+            c3 = conn.cursor()
+            for row in c3.execute("SELECT * FROM player_inv_v WHERE pack = 'y' AND title = '" + command + "'"):
+                pos1 = row[5]
+                c5 = conn.cursor()
+                c5.execute("UPDATE player_inv SET equip = 'n', pack = 'y' WHERE equip = 'y' AND pos = '" + str(pos1) + "'")
+                c4 = conn.cursor()
+                c4.execute("UPDATE player_inv SET equip = 'y', pack = 'n' WHERE item_id = " + str(row[0]))
+            conn.commit()
+            c3.close()
+            c4.close()
+            c5.close()
+            conn.close()
             # with open('./player_data/temp_inv.csv', 'wb') as wcsvfile:
             #     fieldnames = ['id','title','desc','buff','dmg','equip','pack','pos']
             #     writer = csv.DictWriter(wcsvfile, fieldnames=fieldnames, extrasaction='ignore')
             #     writer.writeheader()
             #     #thisdict = {'id': temp2[0], 'title': temp2[1], 'desc': temp2[2], 'buff': temp2[3], 'dmg': temp2[4], 'equip': temp2[5], 'pack': temp2[6], 'pos': temp2[7]}
             #     writer.writerows(temp2)
-            output = open("./player_data/temp_inv.csv", "w")
-            output.write("id,title,desc,buff,dmg,equip,pack,pos" + "\n")
-            for item in temp2:
-                tmpstr = str(item).replace("[", "")
-                tmpstr = str(tmpstr).replace("]", "")
-                tmpstr = str(tmpstr).replace()
-                output.write(str(tmpstr) + "\n")
-            output.close()
+            
 
 
 
@@ -360,24 +328,23 @@ def inv():
     return;
 
 def combat():
-    
+    conn = sqlite3.connect('./db/cyberpunkdb.sqlite3')
+    c = conn.cursor()
+
     ename = ""
     ehp = 0
     ehpmax = 0
     eatk = 0
     eac = ""
     print "------Combat------"
-    with open('./db/enemies.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            rnd = 1 #numpy.random.rand(10)
-            #print row['id']
-            if row['id'] == str(rnd):
-                ename = row['name']
-                ehp = int(row['hp'])
-                ehpmax = ehp
-                eatk = row['dmg']
-                eac = row['ac']
+    for row in c.execute("SELECT * FROM enemies WHERE id = 1"):
+        ename = row[1]
+        ehp = row[3]
+        ehpmax = ehp
+        eatk = row[4]
+        eac = row[5]
+    c.close()
+    conn.close()
     fightloop = 1
     turn = 1
     #chpmax = hp
@@ -417,6 +384,7 @@ def combat():
                 #global hp 
                 chp -= edmg
                 turn = 1
+                
                 raw_input("Press enter to start your turn...")
 
 
@@ -455,6 +423,10 @@ def help():
 
 def getroom():
 
+    conn = sqlite3.connect('./db/cyberpunkdb.sqlite3')
+    c = conn.cursor()
+    
+    
     #get_room = room.split("|")
     title = ""
     des = ""
@@ -463,22 +435,31 @@ def getroom():
     zone = ""
     lvl = ""
 
-    with open('./db/world.csv') as csvfile:
-        reader = csv.DictReader(csvfile)
-        for row in reader:
-            if str(room[0]) == row['x'] and str(room[1]) == row['y']:
-                #print(row['x'], row['y'], row['title'], row['desc'], row['exits'], row['npc'])
-                title = row['title']
-                des = row['desc']
-                exits = row['exits']
-                npc = row['npc']
-                zone = row['zone']
-                lvl = row['lvl']
-                #print title + des + exits + npc
+    for row in c.execute("SELECT * FROM world WHERE x = " + str(room[0]) + " and y = " + str(room[1])):
+        title = row[3]
+        des = row[4]
+        exits = row[5]
+        npc = row[6]
+        zone = row[7]
+        lvl = row[8]
+
+    # with open('./db/world.csv') as csvfile:
+    #     reader = csv.DictReader(csvfile)
+    #     for row in reader:
+    #         if str(room[0]) == row['x'] and str(room[1]) == row['y']:
+    #             #print(row['x'], row['y'], row['title'], row['desc'], row['exits'], row['npc'])
+    #             title = row['title']
+    #             des = row['desc']
+    #             exits = row['exits']
+    #             npc = row['npc']
+    #             zone = row['zone']
+    #             lvl = row['lvl']
+    #             #print title + des + exits + npc
 
             
 
-
+    c.close()
+    conn.close()
     return title, des, exits, npc, zone, lvl;
 
 start_game()
