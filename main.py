@@ -4,6 +4,26 @@ import os
 import numpy as nrand
 import sqlite3
 
+def login():
+
+    user = raw_input("Username: ")
+    password = raw_input("Password: ")
+
+    conn = sqlite3.connect('./player_data/player.sqlite3')
+    c = conn.cursor()
+
+    for row in c.execute("SELECT username, password, player_id FROM login"):
+        if row[0] == user and row[1] == password:
+            global player_id
+            player_id = row[2]
+            start_game()
+        else:
+            print "Bad Password or username!"
+            exit
+
+
+    return;
+
 def game():
     
     gloop = 1
@@ -43,7 +63,13 @@ def game():
         else:
             print "There is no one around to talk to."
         print " "
-        
+        print "The following items are on the ground:"
+        conn = sqlite3.connect('./db/cyberpunkdb.sqlite3')
+        c = conn.cursor()
+        for row in c.execute("SELECT title FROM item_locs_v WHERE x = " + str(room[0]) + " AND y = " + str(room[1])):
+            print row[0]
+        c.close()
+        conn.close()
         if "pve" in zone:
             chance = int(nrand.random.randint(low=0, high=10, size=1))
             if chance <= 2:
@@ -80,6 +106,12 @@ def game():
                         raw_input("Press enter to continue....")
                 else:
                     print "Invalid Direction."
+            elif "pickup" in command:
+                title = raw_input("What would you like to pickup?: ")
+                pickup(title)
+            elif "save" in command:
+                start = 0
+                save_game(start)
             elif "/c" in command:
                 csheet()
                 raw_input("Press Enter to Return...")
@@ -107,7 +139,7 @@ def start_game():
     if game == "n":
         new_game()
     elif game == "l":
-        exit
+        load_game()
     elif game == "q":
         exit
 
@@ -120,6 +152,89 @@ def new_game():
     char_setup()
     game()
 
+    return;
+
+def load_game():
+    conn = sqlite3.connect('./player_data/player.sqlite3')
+    c = conn.cursor()
+
+    global cname
+    global csex
+    global cclass
+    global room
+    global chp
+    global hp
+    global credit
+    global cstr
+    global ccon
+    global cdex
+    global cint
+    global cwis
+    global ccha
+    global player_id
+    for row in c.execute("SELECT * FROM save WHERE id = " + str(player_id)): 
+       cname = row[1]
+       csex = row[2]
+       cclass = row[3]
+       room = [row[4],row[5]]
+       chp =  row[6]
+       hp = row[7]
+       credit = row[8]
+       cstr = row[9]
+       ccon = row[10]
+       cdex = row[11]
+       cint = row[12]
+       cwis = row[13]
+       ccha = row[14]
+
+    c.close()
+    conn.close()
+    statrefresh()
+    game()
+
+    return;
+
+def save_game(start):
+    conn = sqlite3.connect('./player_data/player.sqlite3')
+    c = conn.cursor()
+    if start == 1:
+        global cname
+        global csex
+        global cclass
+        global room
+        global chp
+        global maxhp
+        global credit
+        global cstr
+        global ccon
+        global cdex
+        global cint
+        global cwis
+        global ccha
+        c.execute("INSERT INTO save (name, sex, class, x, y, chp, maxhp, credits, cstr, ccon, cdex, cint, cwis, ccha) VALUES ('" + cname + "', '" + csex + "', '" + cclass + "', " + str(room[0]) + ", " + str(room[1]) + ", " + str(chp) + ", " + str(hp) + ", " + str(credit) + ", " + str(cstr) + ", " + str(ccon) + ", " + str(cdex) + ", " + str(cint) + ", " + str(cwis) + ", " + str(ccha) + ")") 
+        
+        conn.commit()
+        c.close()
+        conn.close()
+    else:
+        global cname
+        global csex
+        global cclass
+        global room
+        global chp
+        global maxhp
+        global credit
+        global cstr
+        global ccon
+        global cdex
+        global cint
+        global cwis
+        global ccha
+        c.execute("UPDATE save SET x = " + str(room[0]) + ", y = " + str(room[1]) + ", chp = " + str(chp) + ", maxhp = " + str(hp) + ", credits = " + str(credit) + ", cstr = " + str(cstr) + ", ccon = " + str(ccon) + ", cdex = " + str(cdex) + ", cint = " + str(cint) + ", cwis = " + str(cwis) + ", ccha = " + str(ccha) + " WHERE id = " + str(player_id))
+        
+        conn.commit()
+        c.close()
+        conn.close()
     return;
 
 def char_setup():
@@ -234,10 +349,12 @@ def char_setup():
         cint += 1
         cwis += 2
         ccha += 5
-
+    statrefresh()
     print "Here is your character sheet. To see your character sheet just type, /c "
     raw_input("Press enter to continue....")
+    start = 1
     csheet()
+    save_game(start)
     raw_input("Press enter to continue....")
 
     return;
@@ -250,6 +367,8 @@ def csheet():
     print "Sex:   " + csex
     print "Class: " + cclass
     print "HP:    " + str(chp) + "/" + str(hp)
+    print "AC:    " + str(armor)
+    print "Damage:" + str(atk)
     print "--------Stats--------"
     print "Strength:     " + str(cstr)
     print "Constitution: " + str(ccon)
@@ -274,8 +393,8 @@ def inv():
         print "-------Equipped-------"
         for row in c.execute("SELECT i.title, i.pos FROM player_inv pi, items i WHERE pi.item_id = i.id AND equip = 'y'"):
             print str(row[1]) + ": " + str(row[0])
-        print "----------------------"
-        print "-------Backpack-------"
+        print "-----------------------"
+        print "------Backpack(" + str(slots) + ")------"
         c.close()
         c1 = conn.cursor()
         for row in c1.execute("SELECT i.title FROM player_inv pi, items i WHERE pi.item_id = i.id AND pack = 'y'"):
@@ -299,15 +418,51 @@ def inv():
             c3 = conn.cursor()
             for row in c3.execute("SELECT * FROM player_inv_v WHERE pack = 'y' AND title = '" + command + "'"):
                 pos1 = row[5]
+                iid = row[0]
                 c5 = conn.cursor()
                 c5.execute("UPDATE player_inv SET equip = 'n', pack = 'y' WHERE equip = 'y' AND pos = '" + str(pos1) + "'")
                 c4 = conn.cursor()
                 c4.execute("UPDATE player_inv SET equip = 'y', pack = 'n' WHERE item_id = " + str(row[0]))
+                c6 = conn.cursor()
+                # Reset all values to default
+                global slots
+                slots = 0
+                global armor
+                armor = 0
+                global atk
+                atk = 2
+                statrefresh()
+                # for row in c6.execute("SELECT buff, dmg FROM player_inv_v WHERE equip = 'y'"):
+                #     btemp = row[0]
+                #     dtemp = row[1]
+                #     pbuff = btemp.split("|")
+                #     if pbuff[0] == "ac":
+                #         armor += int(pbuff[1])
+                #     elif pbuff[0] == "slots":
+                #         slots += int(pbuff[1])
+                    
+                #     if dtemp > 0:
+                #         atk += dtemp
+
+
+               
+                # for row in c6.execute("SELECT buff, dmg FROM player_inv_v WHERE id = " + str(iid)):
+                #     btemp = row[0]
+                #     dtemp = row[1]
+                #     pbuff = btemp.split("|")
+                #     global atk
+                #     atk = 2
+                #     atk += dtemp
+                #     if pbuff[0] == "ac":
+                #         global ac 
+                #         ac += pbuff[1]                    
             conn.commit()
             c3.close()
             c4.close()
             c5.close()
+            c6.close()
             conn.close()
+            #conn.close()
             # with open('./player_data/temp_inv.csv', 'wb') as wcsvfile:
             #     fieldnames = ['id','title','desc','buff','dmg','equip','pack','pos']
             #     writer = csv.DictWriter(wcsvfile, fieldnames=fieldnames, extrasaction='ignore')
@@ -315,8 +470,45 @@ def inv():
             #     #thisdict = {'id': temp2[0], 'title': temp2[1], 'desc': temp2[2], 'buff': temp2[3], 'dmg': temp2[4], 'equip': temp2[5], 'pack': temp2[6], 'pos': temp2[7]}
             #     writer.writerows(temp2)
             
-
-
+        elif "describe" in command:
+            obj = raw_input("What object do you want details on?: ")
+            c7 = conn.cursor()
+            for row in c7.execute("SELECT id, title, desc, buff, dmg FROM player_inv_v WHERE title = '" + obj + "'"):
+                print "---Item Description---"
+                if row[0] == 7:
+                    print b9
+                elif row[0] == 3:
+                    print bk
+                print " "
+                print "Name:        " + row[1]
+                print "Description: " + row[2]
+                nwtemp = row[3]
+                nonweap = nwtemp.split("|")
+                if nonweap[0] == "slots":
+                    print "Slots:       " + str(nonweap[1])
+                elif nonweap[0] == "ac":
+                    print "Armor:       " + str(nonweap[1])
+                elif nonweap[0] == "0":
+                    print "Damage:      " + str(row[4])
+                print " "
+            c7.close()
+            conn.close()
+            #raw_input("Press enter to continue....")
+        
+        elif "drop" in command:
+            drop = raw_input("What would you like to drop?: ")
+            c8 = conn.cursor()
+            for row in c8.execute("SELECT id FROM player_inv_v WHERE title = '" + drop + "'"):
+                c10 = conn.cursor()
+                c9 = conn.cursor()
+                c10.execute("INSERT INTO item_locs (x, y, item_id) VALUES (" + str(room[0]) + ", " + str(room[1]) + ", " + str(row[0]) + ")")
+                c9.execute("DELETE FROM player_inv WHERE item_id = " + str(row[0]))
+            statrefresh()
+            conn.commit()
+            c8.close()
+            c9.close()
+            c10.close()
+            conn.close()
 
         elif "exit" in command:
             invloop = 0
@@ -324,7 +516,46 @@ def inv():
         
             
             #print temp2
-        raw_input("Press any key....")
+        raw_input("Press enter to continue....")
+    return;
+
+def pickup(title):
+    conn = sqlite3.connect('./db/cyberpunkdb.sqlite3')
+    c = conn.cursor()
+    c1 = conn.cursor()
+
+    for row in c1.execute("SELECT id, pos FROM items WHERE title = '" + title + "'"):
+        pos1 = row[1]
+        iid = row[0]
+        c.execute("INSERT INTO player_inv (item_id, equip, pack, pos) VALUES (" + str(iid) + ", 'n', 'y', '" + pos1 + "')")
+    
+
+    c2 = conn.cursor()
+    c2.execute("DELETE FROM item_locs WHERE x = " + str(room[0]) + " AND y = " + str(room[1]) + " AND item_id = " + str(iid))
+    conn.commit()
+
+    return;
+
+def statrefresh():
+    conn = sqlite3.connect('./db/cyberpunkdb.sqlite3')
+    c6 = conn.cursor()
+    global slots
+    slots = 0
+    global armor
+    armor = 0
+    global atk
+    atk = 2
+    for row in c6.execute("SELECT buff, dmg FROM player_inv_v WHERE equip = 'y'"):
+        btemp = row[0]
+        dtemp = row[1]
+        pbuff = btemp.split("|")
+        if pbuff[0] == "ac":
+            armor += int(pbuff[1])
+        elif pbuff[0] == "slots":
+            slots += int(pbuff[1])
+                    
+        if dtemp > 0:
+            atk += dtemp
     return;
 
 def combat():
@@ -462,5 +693,25 @@ def getroom():
     conn.close()
     return title, des, exits, npc, zone, lvl;
 
-start_game()
+#images
+
+#Barsetta 9mm
+global b9
+b9 = """ 
+         __________________
+        |_________|___|__ /=
+       /_________________/ 
+       /  /__/  | | | |
+      /  /      |_____|
+     /__/"""
+#Rusty Bowie Knife
+global bk
+bk = """
+     _____|______________
+    |_____|_____________/
+          |"""
+
+
+
+login()
 

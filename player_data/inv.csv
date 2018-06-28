@@ -1,8 +1,0 @@
-id,title,desc,buff,dmg,equip,pack,pos
-1,Worn Leather Jacket,"A plain black leather jacket. Nothing special.",ac|1,0,y,n,body
-2,Black Tactical Backpack (2L),"A small tactical backpack.",slots|4,0,y,n,back
-3,Rusty Bowie Knife,"A rusty bowie knife. It's now very sharp.",0,2,y,n,hand
-4,Rations,"A high calorie meal. Doesn't taste good but will keep you alive.",hp|10,0,n,y,none
-5,Blue Jeans,"Jeans. That are blue.",ac|1,0,y,n,legs
-6,Aviators,"A pair of black aviator sunglasses.",ac|1,0,y,n,head
-7,9mm Pistol,"A pistol in the 9mm caliber.",0,5,n,y,hand
