@@ -4,6 +4,11 @@ import os
 import numpy as nrand
 import sqlite3
 
+class format:
+    BOLD = '\033[1m'
+    GREEN = '\033[92m'
+    END = '\033[0m'
+
 def login():
 
     user = raw_input("Username: ")
@@ -29,6 +34,7 @@ def game():
     gloop = 1
 
     while gloop != 0:
+        conn = sqlite3.connect('./db/cyberpunkdb.sqlite3')
         os.system('cls' if os.name == 'nt' else 'clear')
         title, des, exits, npc, zone, lvl = getroom()
         print " "
@@ -56,19 +62,22 @@ def game():
             else:
                 ex = ex + "None"
         print " "
-        print "The obvious exit(s) are: " + ex
+        print "The obvious exit(s) are: " + format.BOLD +  ex + format.END
         print " "
         if npc != "0":
-            print npc + " Is in the area."
+            c = conn.cursor() 
+            for row in c.execute("SELECT name FROM npc WHERE id = " + str(npc)):
+                print format.GREEN + str(row[0]) + format.END + " Is in the area."
+            c.close()
         else:
             print "There is no one around to talk to."
         print " "
         print "The following items are on the ground:"
-        conn = sqlite3.connect('./db/cyberpunkdb.sqlite3')
-        c = conn.cursor()
-        for row in c.execute("SELECT title FROM item_locs_v WHERE x = " + str(room[0]) + " AND y = " + str(room[1])):
+        print " "
+        c1 = conn.cursor()
+        for row in c1.execute("SELECT title FROM item_locs_v WHERE x = " + str(room[0]) + " AND y = " + str(room[1])):
             print row[0]
-        c.close()
+        c1.close()
         conn.close()
         if "pve" in zone:
             chance = int(nrand.random.randint(low=0, high=10, size=1))
@@ -109,6 +118,11 @@ def game():
             elif "pickup" in command:
                 title = raw_input("What would you like to pickup?: ")
                 pickup(title)
+            elif "talk" in command:
+                if npc != 0:
+                    talk()
+                else:
+                    print "No one to talk to!"
             elif "save" in command:
                 start = 0
                 save_game(start)
@@ -129,7 +143,7 @@ def game():
     return;
 
 def start_game():
-
+    os.system('cls' if os.name == 'nt' else 'clear')
     print "Cyberwar 2120"
     print "(N)ew Game"
     print "(L)oad Game"
@@ -628,6 +642,71 @@ def fight_win():
 
     return;
 
+def talk():
+
+    os.system('cls' if os.name == 'nt' else 'clear')
+    
+
+    loop = 1
+    
+    
+        #global npc
+        #the_npc = npc
+    print "-----Dialogue-----"
+    while loop == 1:
+        conn = sqlite3.connect('./db/cyberpunkdb.sqlite3')
+        c = conn.cursor()
+        for row in c.execute("SELECT * FROM dialogue WHERE npc_id = " + str(npc) + " AND type = 'intro'"):
+            print " "
+            print row[2]
+            print " "
+            i = 3
+            
+            while i <= 6:
+                if row[i] != "none":
+                    key_str = str(row[i]) + " "
+                i += 1
+            print "Keywords: " + format.GREEN + key_str + format.END
+            print " "
+            response = raw_input(">> ")
+            if "jobs" in response:
+                c1 = conn.cursor()
+                print "-----Available Jobs-----"
+                for row in c.execute("SELECT * FROM jobs WHERE lvl = 1"):
+                    print row[1] + " ID: " + str(row[0])
+                print " "
+                response = raw_input("Which job do you want (enter the id)?: ")
+                c2 = conn.cursor()
+                for row in c2.execute("SELECT * FROM jobs WHERE id = " + response):
+                    print " "
+                    print "Job Accepted: " + row[1]
+                    conn1 = sqlite3.connect('./player_data/player.sqlite3')
+                    c3 = conn1.cursor()
+                    c3.execute("INSERT INTO jobs (job_id, player_id, complete) VALUES (" + str(row[0]) + ", " + str(player_id) + ", 'n')")
+                    conn1.commit()
+            elif "bye" in response:
+                loop = 0
+
+        c.close()
+        #c1.close()
+        c2.close()
+        c3.close()
+        conn.close()
+        conn1.close()
+    return;
+
+def jobs_list():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+    conn = sqlite3.connect('./player_data/player.sqlite3')
+    c = conn.cursor()
+    for row in c.execute("SELECT * FROM jobs WHERE player_id = " + str(player_id) + "  AND complete = 'n'"):
+
+    for row in c.execute("SELECT * FROM jobs WHERE"):
+
+
+    return;
+
 def help():
 
     if "hacker" in cclass:
@@ -662,6 +741,7 @@ def getroom():
     title = ""
     des = ""
     exits = ""
+    global npc
     npc = ""
     zone = ""
     lvl = ""
