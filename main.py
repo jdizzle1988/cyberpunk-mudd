@@ -131,6 +131,9 @@ def game():
                 raw_input("Press Enter to Return...")
             elif "/i" in command:
                 inv()
+                #raw_input("Press Enter to Return...")
+            elif "/j" in command:
+                jobs_list()
                 raw_input("Press Enter to Return...")
             else:
                 print "Invalid Command"
@@ -699,11 +702,33 @@ def jobs_list():
     os.system('cls' if os.name == 'nt' else 'clear')
 
     conn = sqlite3.connect('./player_data/player.sqlite3')
+    conn1 = sqlite3.connect('./db/cyberpunkdb.sqlite3')
     c = conn.cursor()
-    for row in c.execute("SELECT * FROM jobs WHERE player_id = " + str(player_id) + "  AND complete = 'n'"):
-
-    for row in c.execute("SELECT * FROM jobs WHERE"):
-
+    c1 = conn1.cursor()
+    print "----Current Jobs----"
+    print " "
+    for row in c.execute("SELECT job_id, complete FROM jobs WHERE player_id = " + str(player_id) + "  AND complete = 'n'"):
+        print "----Incomplete Jobs----"
+        for row1 in c1.execute("SELECT text FROM jobs WHERE id = " + str(row[0])):
+            print str(row1[0]) + " ID: " + str(row[0])
+        print " "
+        c1.close()
+    c.close()
+    c2 = conn1.cursor()
+    loop = 1
+    while loop == 1:
+        command = raw_input("What job do you want details on? ")
+        if "exit" in command:
+            loop = 0
+        else:
+            for row2 in c2.execute("SELECT task FROM jobs WHERE id = " + command):
+                print " "
+                print row2[0]
+                print " "
+                raw_input("Press Enter to Continue...")
+    c2.close()
+    conn.close()
+    conn1.close()
 
     return;
 
@@ -790,8 +815,17 @@ bk = """
      _____|______________
     |_____|_____________/
           |"""
-
-
+global mp
+mp = """
+  ____________
+ |  |1|2|3|4|5|
+ |1|+P+   +R+ |
+ |2|          |
+ |3|+B+   +C+ |
+ |4|          |
+ |5|          |
+ |6|      +G  |
+ |7|__________|"""
 
 login()
 
