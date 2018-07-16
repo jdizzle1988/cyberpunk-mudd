@@ -7,6 +7,7 @@ import sqlite3
 class format:
     BOLD = '\033[1m'
     GREEN = '\033[92m'
+    BLUE = '\033[94m'
     END = '\033[0m'
 
 def login():
@@ -38,7 +39,7 @@ def game():
         os.system('cls' if os.name == 'nt' else 'clear')
         title, des, exits, npc, zone, lvl = getroom()
         print " "
-        print "Location: " + title
+        print "Location: " + format.BLUE + title + format.END
         print " "
         print des
         oexit = exits.split("|")
@@ -62,7 +63,9 @@ def game():
             else:
                 ex = ex + "None"
         print " "
+        print "-------------------------------------------------------------"
         print "The obvious exit(s) are: " + format.BOLD +  ex + format.END
+        print "-------------------------------------------------------------"
         print " "
         if npc != "0":
             c = conn.cursor() 
@@ -75,8 +78,13 @@ def game():
         print "The following items are on the ground:"
         print " "
         c1 = conn.cursor()
+        didprint = 0
         for row in c1.execute("SELECT title FROM item_locs_v WHERE x = " + str(room[0]) + " AND y = " + str(room[1])):
             print row[0]
+            didprint = 1
+        if didprint == 0:
+            print "Nothing"
+        
         c1.close()
         conn.close()
         if "pve" in zone:
@@ -87,6 +95,7 @@ def game():
             else:
                 print "You do not see any enemies."
         else:
+            print " "
             command = raw_input("What would you like to do?: ").lower()
             if "go" in command:
                 if "north" in command:
@@ -664,10 +673,10 @@ def talk():
             print row[2]
             print " "
             i = 3
-            
+            key_str = ""
             while i <= 6:
                 if row[i] != "none":
-                    key_str = str(row[i]) + " "
+                    key_str += str(row[i]) + " "
                 i += 1
             print "Keywords: " + format.GREEN + key_str + format.END
             print " "
@@ -687,15 +696,18 @@ def talk():
                     c3 = conn1.cursor()
                     c3.execute("INSERT INTO jobs (job_id, player_id, complete) VALUES (" + str(row[0]) + ", " + str(player_id) + ", 'n')")
                     conn1.commit()
+                c2.close()
+                c3.close()
+                conn1.close()
             elif "bye" in response:
                 loop = 0
 
         c.close()
         #c1.close()
-        c2.close()
-        c3.close()
+        
+        
         conn.close()
-        conn1.close()
+        
     return;
 
 def jobs_list():
